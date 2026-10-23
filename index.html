@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notícia do dia</title>
+<style>
+:root {
+  color-scheme: dark;
+  --fundo: #011a14;
+  --painel: #04271e;
+  --borda: #17463a;
+  --texto: #e8f3ee;
+  --suave: #93b0a6;
+  --destaque: #f0b27a;
+  --link: #8fe0bd;
+  --erro: #f87171;
+}
+html, body { height: 100%; }
+html { background: var(--fundo); }
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 16px;
+}
+#noticia { height: 100%; }
+a { color: var(--link); }
+.pilula {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #3a1f1a;
+  color: var(--destaque);
+  font: 0.8rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.card {
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--painel);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+}
+.card img {
+  display: block;
+  width: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  object-fit: cover;
+}
+.texto { padding: 16px; }
+.card h3 { font-size: 1.2rem; line-height: 1.35; margin: 0 0 8px; }
+.card p { margin: 0; color: var(--suave); font-size: 0.9rem; }
+.vazio, .falha {
+  border: 1px dashed var(--borda);
+  border-radius: 12px;
+  padding: 16px;
+  color: var(--suave);
+}
+.falha { border-color: var(--erro); color: var(--erro); }
+</style>
+</head>
+<body>
+<main>
+  <div id="noticia"></div>
+</main>
+<script>
+const URL_HOJE = "https://raw.githubusercontent.com/CassiaCristina0o/noticias-diaria/dados/data/hoje.json";
+const INTERVALO = 5 * 60 * 1000;
+
+const noticia = document.getElementById("noticia");
+
+function criar(tag, classe, texto) {
+  const e = document.createElement(tag);
+  if (classe) e.className = classe;
+  if (texto !== undefined) e.textContent = texto;
+  return e;
+}
+
+function diaBr(dia) {
+  const [a, m, d] = dia.split("-");
+  return `${d}/${m}/${a}`;
+}
+
+function cartao(h) {
+  const card = criar("div", "card");
+  if (/^https:\/\//.test(h.imagem || "")) {
+    const foto = criar("img");
+    foto.src = h.imagem.replace("/ws/240/", "/ws/480/");
+    foto.alt = "";
+    foto.referrerPolicy = "no-referrer";
+    foto.onerror = () => {
+      if (foto.src !== h.imagem) foto.src = h.imagem;
+      else foto.remove();
+    };
+    card.appendChild(foto);
+  }
+  const texto = criar("div", "texto");
+  texto.appendChild(criar("span", "pilula", "Notícia do dia"));
+  const titulo = criar("h3");
+  if (/^https:\/\//.test(h.link || "")) {
+    const a = criar("a", null, h.titulo);
+    a.href = h.link;
+    a.target = "_blank";
+    a.rel = "noopener";
+    titulo.appendChild(a);
+  } else {
+    titulo.textContent = h.titulo;
+  }
+  texto.appendChild(titulo);
+  const fonte = criar("p", null, "Fonte: ");
+  const origem = criar("a", null, h.fonte);
+  origem.href = "https://www.bbc.com/portuguese";
+  origem.target = "_blank";
+  origem.rel = "noopener";
+  fonte.appendChild(origem);
+  fonte.appendChild(document.createTextNode(` · ${diaBr(h.data)}`));
+  texto.appendChild(fonte);
+  card.appendChild(texto);
+  return card;
+}
+
+function mensagem(classe, texto) {
+  noticia.replaceChildren(criar("div", classe, texto));
+}
+
+async function carregar() {
+  try {
+    const resposta = await fetch(URL_HOJE, { cache: "no-cache" });
+    if (resposta.status === 404) return mensagem("vazio", "Nenhuma notícia escolhida até agora.");
+    if (!resposta.ok) return mensagem("falha", `Não foi possível carregar a notícia. Resposta ${resposta.status}.`);
+    noticia.replaceChildren(cartao(await resposta.json()));
+  } catch (e) {
+    mensagem("falha", `Não foi possível carregar a notícia. ${e.message}`);
+  }
+}
+
+carregar();
+setInterval(carregar, INTERVALO);
+</script>
+</body>
+</html>

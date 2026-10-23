@@ -1,0 +1,85 @@
+name: diario
+
+on:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+    inputs:
+      feed_url:
+        description: URL do feed para teste (vazio usa a da BBC)
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: diario
+  cancel-in-progress: false
+
+env:
+  MAX_EXECUCOES: 30
+  PASTA_DADOS: dados/data
+
+jobs:
+  rodar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Preparar branch dados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git worktree add --detach dados
+          cd dados
+          if git ls-remote --exit-code --heads origin dados > /dev/null; then
+            git fetch origin dados:refs/remotes/origin/dados
+            git checkout -B dados origin/dados
+          else
+            git checkout --orphan dados
+            git rm -rf --quiet .
+          fi
+
+      - name: Rodar script
+        id: script
+        continue-on-error: true
+        env:
+          FEED_URL: ${{ inputs.feed_url }}
+        run: python scripts/mensagem_do_dia.py
+
+      - name: Gravar na branch dados
+        id: gravar
+        working-directory: dados
+        run: |
+          git add data/*.json
+          if git diff --cached --quiet; then
+            echo "numero=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          anteriores=$(git rev-list --count --grep='^execução' HEAD 2>/dev/null || echo 0)
+          numero=$((anteriores + 1))
+          git commit -m "$(printf 'execução %02d/%02d' "$numero" "$MAX_EXECUCOES")"
+          git push origin HEAD:refs/heads/dados
+          echo "numero=$numero" >> "$GITHUB_OUTPUT"
+
+      - name: Zerar histórico da branch dados ao chegar no limite
+        if: steps.gravar.outputs.numero >= env.MAX_EXECUCOES
+        working-directory: dados
+        run: |
+          git checkout --orphan dados-limpa
+          git add data/*.json
+          git commit -m "ciclo reiniciado"
+          git push --force origin HEAD:refs/heads/dados
+
+      - name: Marcar falha
+        if: steps.script.outcome == 'failure'
+        run: exit 1
