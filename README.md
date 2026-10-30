@@ -1,8 +1,10 @@
 # Notícias diária
 
-Rotina em Python que, todo dia às 08h (Brasília), lê o feed RSS da BBC News
-Brasil, seleciona uma notícia positiva e registra a execução. É executada por
-um workflow agendado do GitHub Actions (`cron: 0 11 * * *`, em UTC). O
+Rotina em Python que, todo dia de manhã (agendada para 07h38 de Brasília), lê o
+feed RSS da BBC News Brasil, seleciona uma notícia que passe pelo filtro e
+registra a execução. É executada por um workflow agendado do GitHub Actions
+(`cron: 38 10 * * *`, em UTC). O GitHub pode atrasar workflows agendados, então
+o horário real de início varia. O
 agendamento e a integração com o feed foram validados antes na amostra
 [agendador](https://github.com/CassiaCristina0o/agendador).
 
@@ -10,18 +12,23 @@ agendamento e a integração com o feed foram validados antes na amostra
 
 ## Seleção da notícia
 
-`scripts/mensagem_do_dia.py` aplica, em ordem:
+`scripts/mensagem_do_dia.py` aplica, em ordem (as listas de palavras ficam em
+`scripts/listas.py`):
 
-1. **Normalização:** texto em minúsculas, sem acentos e separado em palavras.
-2. **Correspondência por palavra inteira:** um termo com `*` vale só como
-   prefixo (`descobert*`). Assim `cura` não casa com "procura" e `salv*` não casa
-   com "Salvador".
-3. **Descarte** de itens com termos negativos ou políticos. A palavra negativa
-   vence a positiva.
-4. **Pontuação** pelo número de termos positivos distintos. Repetir um termo não
-   aumenta a nota.
-5. **Escolha** da maior pontuação, com mínimo de 1. No empate, vale o item que
-   aparece primeiro no feed.
+1. **Formato:** só entram matérias escritas (`/portuguese/articles/`). Vídeos,
+   blogs ao vivo, links curtos de divulgação e títulos genéricos como "Clique
+   aqui" são ignorados.
+2. **Normalização:** texto em minúsculas, sem acentos e separado em palavras.
+3. **Correspondência por palavra inteira:** um termo com `*` vale só como
+   prefixo (`acident*`). Assim `lipo` não casa com "lipoaspiração" por acaso e
+   `plastica` não casa com "plástico" de reciclagem.
+4. **Descarte** de itens com termos negativos (violência, tragédia, crise e
+   também emagrecimento, dietas, canetas emagrecedoras, procedimentos
+   estéticos, drogas, execuções, presos e trauma) ou políticos. "Doença" é
+   uma regra condicional: sem "cura" (ou vacina) no texto é barrada; com cura,
+   passa. O filtro olha título e resumo.
+5. **Escolha** da primeira notícia do feed que passou. Não há lista positiva: o
+   que não é barrado, vale.
 6. **Sem repetição:** itens cujo link já consta no log são ignorados.
 
 ## Resultados
@@ -53,8 +60,8 @@ mantendo os arquivos atuais, sem tocar na `main`.
 ## Testes
 
 `tests/test_mensagem_do_dia.py` roda sem internet, com o feed simulado e uma
-pasta temporária. Cobre o filtro (palavra inteira, negativa e política contra
-positiva), a escolha (pontuação, empate, repetição), a busca (timeout, conexão,
+pasta temporária. Cobre o filtro (palavra inteira, negativas, políticas, corpo e
+emagrecimento, formato da matéria), a escolha (primeira que passa, repetição), a busca (timeout, conexão,
 503 com repetição, 404 sem repetição, feed vazio) e o fluxo completo (`OK`,
 `SEM_NOTICIA`, `ERRO`, limite de 30 linhas, log corrompido, imagem presente e
 ausente). Um workflow separado roda os testes a cada alteração na `main`.

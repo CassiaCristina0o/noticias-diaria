@@ -25,8 +25,11 @@ RSS_VAZIO = b"""<?xml version="1.0"?>
 <rss version="2.0"><channel><title>t</title></channel></rss>"""
 
 
+ARTIGOS = "https://www.bbc.com/portuguese/articles/"
+
+
 def noticia(titulo, resumo="", link=None):
-    return {"titulo": titulo, "resumo": resumo, "link": link or f"https://x/{titulo}"}
+    return {"titulo": titulo, "resumo": resumo, "link": link or f"{ARTIGOS}{titulo}"}
 
 
 class Resposta:
@@ -78,61 +81,98 @@ def test_palavras_remove_acento_maiuscula_e_html():
     assert m.palavras("Eleição <b>Já</b> ÁGUA") == ["eleicao", "ja", "agua"]
 
 
-def test_salvador_nao_pontua():
-    r = m.avaliar(noticia("Cidade de Salvador recebe festival"))
-    assert r == {"status": "sem_pontos", "pontos": 0}
+def test_neutra_passa():
+    assert m.avaliar(noticia("Cidade de Salvador recebe festival")) == "ok"
 
 
-def test_procura_nao_casa_com_cura():
-    r = m.avaliar(noticia("Procura por emprego cresce"))
-    assert r["status"] == "sem_pontos"
+def test_negativa_casa_so_palavra_inteira():
+    assert m.avaliar(noticia("Procura por emprego cresce")) == "ok"
 
 
-def test_cura_exata_pontua():
-    r = m.avaliar(noticia("Cientistas anunciam cura"))
-    assert r == {"status": "ok", "pontos": 1}
+def test_negativa_descarta():
+    assert m.avaliar(noticia("Acidente grave deixa feridos")) == "negativa"
 
 
-def test_negativa_vence_positiva():
-    r = m.avaliar(noticia("Descoberta de cura para doença que matou milhões"))
-    assert r["status"] == "negativa"
-
-
-def test_politica_vence_positiva():
-    r = m.avaliar(noticia("Governo anuncia vacina contra a dengue"))
-    assert r["status"] == "politica"
+def test_politica_descarta():
+    assert m.avaliar(noticia("Governo anuncia vacina contra a dengue")) == "politica"
 
 
 def test_morro_nao_e_morte():
-    r = m.avaliar(noticia("Turistas visitam morro famoso"))
-    assert r["status"] == "sem_pontos"
+    assert m.avaliar(noticia("Turistas visitam morro famoso")) == "ok"
 
 
 def test_resumo_entra_no_filtro():
-    r = m.avaliar(noticia("Título neutro", resumo="Houve uma tragédia"))
-    assert r["status"] == "negativa"
+    assert m.avaliar(noticia("Título neutro", resumo="Houve uma tragédia")) == "negativa"
 
 
-def test_termo_repetido_nao_infla_pontos():
-    assert m.avaliar(noticia("Descoberta descoberta descoberta"))["pontos"] == 1
-    assert m.avaliar(noticia("Descoberta de vacina"))["pontos"] == 2
+@pytest.mark.parametrize(
+    "titulo",
+    [
+        "Por que canetas emagrecedoras viraram febre",
+        "A dieta da moda que promete resultado em 7 dias",
+        "Ozempic muda o mercado de alimentos",
+        "Cirurgia plástica cresce entre jovens",
+        "Procedimentos estéticos: o que avaliar",
+        "Jejum intermitente funciona?",
+        "Detenta afirma ter acordado confusa após execução",
+        "Comecei a usar cetamina aos 14 anos",
+        "Atleta fala sobre trauma em prova",
+        "Uso de drogas cresce entre jovens",
+    ],
+)
+def test_corpo_e_emagrecimento_sao_descartados(titulo):
+    assert m.avaliar(noticia(titulo)) == "negativa"
 
 
-def test_escolher_maior_pontuacao():
-    a = noticia("Descoberta")
-    b = noticia("Descoberta de vacina")
-    assert m.escolher([a, b], set())[0] == b
+def test_doenca_sem_cura_e_negativa():
+    assert m.avaliar(noticia("Tenho uma doença da qual falam pouco")) == "negativa"
 
 
-def test_escolher_empate_fica_com_a_primeira():
-    a = noticia("Recorde de visitas")
-    b = noticia("Cientistas anunciam cura")
+def test_doenca_com_cura_passa():
+    assert m.avaliar(noticia("Cientistas anunciam cura de doença rara")) == "ok"
+
+
+def test_doenca_com_vacina_passa():
+    assert m.avaliar(noticia("Nova vacina protege contra doença")) == "ok"
+
+
+def test_cura_nao_libera_outra_negativa():
+    assert m.avaliar(noticia("Cura de doença chega após tragédia")) == "negativa"
+
+
+def test_queda_de_bolsa_passa():
+    assert m.avaliar(noticia("Ações da Alphabet tiveram a maior queda da história")) == "ok"
+
+
+def test_plastico_de_reciclagem_nao_e_cirurgia_plastica():
+    assert m.avaliar(noticia("Fábrica transforma plástico em tijolo")) == "ok"
+
+
+@pytest.mark.parametrize(
+    "link",
+    [
+        "https://www.bbc.com/portuguese/live/abc",
+        "https://www.bbc.com/portuguese/watch/abc",
+        "https://bbc.in/3UkB2wH",
+    ],
+)
+def test_so_materias_escritas(link):
+    assert m.avaliar(noticia("Cidade tem festival", link=link)) == "fora_do_formato"
+
+
+def test_titulo_generico_clique_e_descartado():
+    assert m.avaliar(noticia("Clique aqui")) == "fora_do_formato"
+
+
+def test_escolher_fica_com_a_primeira_que_passa():
+    a = noticia("Cidade tem festival")
+    b = noticia("Escola ganha biblioteca")
     assert m.escolher([a, b], set())[0] == a
 
 
 def test_escolher_ignora_link_repetido():
-    a = noticia("Descoberta de vacina")
-    b = noticia("Cientistas anunciam cura")
+    a = noticia("Cidade tem festival")
+    b = noticia("Escola ganha biblioteca")
     assert m.escolher([a, b], {a["link"]})[0] == b
     escolhida, motivo = m.escolher([a], {a["link"]})
     assert escolhida is None
@@ -143,11 +183,11 @@ def test_escolher_motivo_conta_cada_descarte():
     noticias = [
         noticia("Acidente grave"),
         noticia("Governo anuncia"),
-        noticia("Cidade tem festival"),
+        noticia("Cidade tem festival", link="https://bbc.in/x"),
     ]
     escolhida, motivo = m.escolher(noticias, set())
     assert escolhida is None
-    assert motivo == "3 lidas: 1 negativas, 1 políticas, 1 sem pontos"
+    assert motivo == "3 lidas: 1 negativas, 1 políticas, 1 fora do formato"
 
 
 def test_buscar_feed_devolve_noticias(monkeypatch):
@@ -214,7 +254,7 @@ def test_feed_vazio_vira_erro(monkeypatch):
 
 
 def test_main_ok_grava_hoje_e_log(pasta, monkeypatch):
-    codigo = rodar(monkeypatch, [noticia("Cientistas anunciam cura", link="https://x/1")])
+    codigo = rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1")])
     assert codigo == 0
     hoje = ler(pasta, "hoje.json")
     assert hoje["titulo"] == "Cientistas anunciam cura"
@@ -222,30 +262,30 @@ def test_main_ok_grava_hoje_e_log(pasta, monkeypatch):
     assert hoje["atualizado_em"].endswith("-03:00")
     log = ler(pasta, "log.json")
     assert [r["status"] for r in log] == ["OK"]
-    assert log[0]["link"] == "https://x/1"
+    assert log[0]["link"] == f"{ARTIGOS}1"
 
 
 def test_main_grava_imagem_em_hoje_e_log(pasta, monkeypatch):
-    com_imagem = {**noticia("Cientistas anunciam cura", link="https://x/1"), "imagem": "https://img.exemplo/a.jpg"}
+    com_imagem = {**noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1"), "imagem": "https://img.exemplo/a.jpg"}
     rodar(monkeypatch, [com_imagem])
     assert ler(pasta, "hoje.json")["imagem"] == "https://img.exemplo/a.jpg"
     assert ler(pasta, "log.json")[0]["imagem"] == "https://img.exemplo/a.jpg"
 
 
 def test_main_sem_imagem_grava_nulo(pasta, monkeypatch):
-    rodar(monkeypatch, [noticia("Cientistas anunciam cura", link="https://x/1")])
+    rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1")])
     assert ler(pasta, "hoje.json")["imagem"] is None
     assert ler(pasta, "log.json")[0]["imagem"] is None
 
 
 def test_main_sem_noticia_mantem_hoje(pasta, monkeypatch):
     (pasta / "hoje.json").write_text('{"titulo": "antiga"}', encoding="utf-8")
-    codigo = rodar(monkeypatch, [noticia("Cidade tem festival")])
+    codigo = rodar(monkeypatch, [noticia("Cidade tem festival", link="https://bbc.in/x")])
     assert codigo == 0
     assert ler(pasta, "hoje.json") == {"titulo": "antiga"}
     registro = ler(pasta, "log.json")[0]
     assert registro["status"] == "SEM_NOTICIA"
-    assert registro["detalhe"] == "1 lidas: 1 sem pontos"
+    assert registro["detalhe"] == "1 lidas: 1 fora do formato"
 
 
 def test_main_erro_registra_etapa_e_sai_com_1(pasta, monkeypatch):
@@ -273,10 +313,10 @@ def test_main_nao_repete_link_ja_usado(pasta, monkeypatch):
         "status": "OK",
         "etapa": None,
         "detalhe": "x",
-        "link": "https://x/1",
+        "link": f"{ARTIGOS}1",
     }
     (pasta / "log.json").write_text(json.dumps([anterior]), encoding="utf-8")
-    codigo = rodar(monkeypatch, [noticia("Cientistas anunciam cura", link="https://x/1")])
+    codigo = rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1")])
     assert codigo == 0
     assert ler(pasta, "log.json")[-1]["detalhe"] == "1 lidas: 1 repetidas"
 
@@ -293,11 +333,11 @@ def test_main_limita_log_a_30(pasta, monkeypatch):
         for i in range(30)
     ]
     (pasta / "log.json").write_text(json.dumps(antigos), encoding="utf-8")
-    rodar(monkeypatch, [noticia("Cientistas anunciam cura", link="https://x/novo")])
+    rodar(monkeypatch, [noticia("Cientistas anunciam cura", link="https://www.bbc.com/portuguese/articles/novo")])
     log = ler(pasta, "log.json")
     assert len(log) == 30
     assert log[0]["detalhe"] == "d1"
-    assert log[-1]["link"] == "https://x/novo"
+    assert log[-1]["link"] == "https://www.bbc.com/portuguese/articles/novo"
 
 
 def test_main_log_corrompido_nao_e_sobrescrito(pasta, monkeypatch):

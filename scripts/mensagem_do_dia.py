@@ -12,6 +12,8 @@ from zoneinfo import ZoneInfo
 import feedparser
 import requests
 
+from listas import CONDICIONAIS, EXCECOES_NEGATIVAS, NEGATIVAS, POLITICAS
+
 FEED_URL = os.environ.get("FEED_URL") or "https://feeds.bbci.co.uk/portuguese/rss.xml"
 PASTA_DADOS = Path(os.environ.get("PASTA_DADOS", "data"))
 USER_AGENT = "noticias-as-08h (portfolio de Cassia Cristina)"
@@ -22,40 +24,10 @@ ESPERA = 30
 LIMITE_LOG = 30
 FUSO = ZoneInfo("America/Sao_Paulo")
 
-NEGATIVAS = """
-mort* morr* matou matam matar assassin* homicid* feminicid* suicid* luto vitima* ferid*
-crime* crimin* roub* furt* estupr* sequestr* tortur* abuso* fraude* corrupc* escandalo*
-acusad* condenad* condenac* preso* prisao denunc*
-violenc* violent* agress* ataque* atentado* terror* bomba* bombardeio* tiroteio massacre*
-genocid* guerra* conflito* invas* ameac* refugiad*
-tragedia* acidente* desastre* incendio* explos* naufrag* terremoto* enchente* inundac*
-deslizamento* colapso
-crise* falenc* desemprego inflac* recessao epidemia* pandemia* surto* fome miseria
-""".split()
-
-EXCECOES_NEGATIVAS = {"mortadela", "morro", "morros"}
-
-POLITICAS = """
-governo* governador* prefeit* president* ministr* ministerio* congresso senado* senador*
-deputad* camara parlament* legisla* planalto stf stj tse
-eleica* eleito* eleitor* voto* votac* urna* candidat* partido* politic* diplomat*
-ditadura* democracia* golpe* impeachment
-lula bolsonaro trump biden putin zelensky maduro milei netanyahu vorcaro
-""".split()
-
-POSITIVAS = """
-descobert* descobr* cura curou curam curar curado curada vacina* tratament* transplant*
-inovac* invento* inventou solucao solucoes
-conquist* recorde* sucesso premio* premiad* medalha* avanc* pioneir* inedit*
-resgat* salvo salva salvou salvam salvar melhora* melhoria* recuper* esperanca*
-solidaried* doac* voluntari*
-reflorest* reciclag* renovave* sustentavel preserv* animal* biodiversidade ambiental* ecolog* clima* energ* solar eolica hidreletrica
-""".split()
-
 ROTULOS = {
     "negativa": "negativas",
     "politica": "políticas",
-    "sem_pontos": "sem pontos",
+    "fora_do_formato": "fora do formato",
     "repetida": "repetidas",
 }
 
@@ -130,31 +102,37 @@ def termos_encontrados(lista, termos):
     return {t for t in termos if any(casa(p, t) for p in lista)}
 
 
+def e_materia(noticia):
+    """Só entram matérias escritas: sem vídeo, blog ao vivo, link curto ou título genérico."""
+    if "/portuguese/articles/" not in noticia["link"]:
+        return False
+    return not noticia["titulo"].lower().startswith("clique")
+
+
 def avaliar(noticia):
+    if not e_materia(noticia):
+        return "fora_do_formato"
     lista = palavras(f"{noticia['titulo']} {noticia['resumo']}")
     sem_excecoes = [p for p in lista if p not in EXCECOES_NEGATIVAS]
     if termos_encontrados(sem_excecoes, NEGATIVAS):
-        return {"status": "negativa", "pontos": 0}
+        return "negativa"
+    for gatilhos, liberam in CONDICIONAIS:
+        if termos_encontrados(lista, gatilhos) and not termos_encontrados(lista, liberam):
+            return "negativa"
     if termos_encontrados(lista, POLITICAS):
-        return {"status": "politica", "pontos": 0}
-    pontos = len(termos_encontrados(lista, POSITIVAS))
-    return {"status": "ok" if pontos else "sem_pontos", "pontos": pontos}
+        return "politica"
+    return "ok"
 
 
 def escolher(noticias, links_usados):
     contagem = {}
-    candidatas = []
     for noticia in noticias:
-        avaliacao = avaliar(noticia)
-        status = avaliacao["status"]
+        status = avaliar(noticia)
         if status == "ok" and noticia["link"] in links_usados:
             status = "repetida"
         if status == "ok":
-            candidatas.append((avaliacao["pontos"], noticia))
-        else:
-            contagem[status] = contagem.get(status, 0) + 1
-    if candidatas:
-        return max(candidatas, key=lambda c: c[0])[1], None
+            return noticia, None
+        contagem[status] = contagem.get(status, 0) + 1
     partes = [f"{contagem[s]} {r}" for s, r in ROTULOS.items() if s in contagem]
     return None, f"{len(noticias)} lidas: " + ", ".join(partes)
 
