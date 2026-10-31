@@ -1,9 +1,9 @@
 # Notícias diária
 
-Rotina em Python que, todo dia de manhã (agendada para 07h38 de Brasília), lê o
+Rotina em Python que, todo dia (agendada para 11h38 de Brasília), lê o
 feed RSS da BBC News Brasil, seleciona uma notícia que passe pelo filtro e
 registra a execução. É executada por um workflow agendado do GitHub Actions
-(`cron: 38 10 * * *`, em UTC). O GitHub pode atrasar workflows agendados, então
+(`cron: 38 14 * * *`, em UTC). O GitHub pode atrasar workflows agendados, então
 o horário real de início varia. O
 agendamento e a integração com o feed foram validados antes na amostra
 [agendador](https://github.com/CassiaCristina0o/agendador).
