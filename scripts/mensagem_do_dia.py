@@ -4,7 +4,7 @@ import re
 import sys
 import time
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
@@ -22,6 +22,8 @@ TIMEOUT = 10
 TENTATIVAS = 3
 ESPERA = 30
 LIMITE_LOG = 30
+LIMITE_HOJE = 3
+HORA_PUBLICACAO = 8
 FUSO = ZoneInfo("America/Sao_Paulo")
 
 ROTULOS = {
@@ -150,6 +152,38 @@ def ler_log(pasta):
     return log
 
 
+def migrar_item(item):
+    quando = item.get("atualizado_em")
+    return {
+        "publicar_em": quando,
+        "buscada_em": quando,
+        "titulo": item.get("titulo"),
+        "link": item.get("link"),
+        "imagem": item.get("imagem"),
+        "fonte": item.get("fonte", FONTE),
+    }
+
+
+def ler_hoje(pasta):
+    caminho = pasta / "hoje.json"
+    if not caminho.exists():
+        return []
+    try:
+        dados = json.loads(caminho.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        raise ErroDoProcesso("leitura_hoje", type(e).__name__, str(caminho)) from e
+    if isinstance(dados, dict):
+        return [migrar_item(dados)]
+    if not isinstance(dados, list):
+        raise ErroDoProcesso("leitura_hoje", "FormatoInvalido", str(caminho))
+    return dados
+
+
+def publicar_em(agora):
+    amanha = agora + timedelta(days=1)
+    return amanha.replace(hour=HORA_PUBLICACAO, minute=0, second=0, microsecond=0)
+
+
 def escrever_json(caminho, dados):
     caminho.parent.mkdir(parents=True, exist_ok=True)
     temporario = caminho.with_name(caminho.name + ".tmp")
@@ -158,7 +192,7 @@ def escrever_json(caminho, dados):
     os.replace(temporario, caminho)
 
 
-def registro(agora, status, detalhe, etapa=None, link=None, imagem=None):
+def registro(agora, status, detalhe, etapa=None, link=None, imagem=None, publicacao=None):
     return {
         "quando": agora.strftime("%Y-%m-%d %H:%M:%S"),
         "status": status,
@@ -166,22 +200,21 @@ def registro(agora, status, detalhe, etapa=None, link=None, imagem=None):
         "detalhe": detalhe,
         "link": link,
         "imagem": imagem or None,
+        "publicar_em": publicacao.isoformat(timespec="seconds") if publicacao else None,
     }
 
 
-def gravar(pasta, agora, log, novo, noticia=None):
+def gravar(pasta, agora, log, novo, hoje, noticia=None):
     if noticia:
-        escrever_json(
-            pasta / "hoje.json",
-            {
-                "data": agora.strftime("%Y-%m-%d"),
-                "titulo": noticia["titulo"],
-                "link": noticia["link"],
-                "imagem": noticia.get("imagem") or None,
-                "fonte": FONTE,
-                "atualizado_em": agora.isoformat(timespec="seconds"),
-            },
-        )
+        item = {
+            "publicar_em": publicar_em(agora).isoformat(timespec="seconds"),
+            "buscada_em": agora.isoformat(timespec="seconds"),
+            "titulo": noticia["titulo"],
+            "link": noticia["link"],
+            "imagem": noticia.get("imagem") or None,
+            "fonte": FONTE,
+        }
+        escrever_json(pasta / "hoje.json", (hoje + [item])[-LIMITE_HOJE:])
     escrever_json(pasta / "log.json", (log + [novo])[-LIMITE_LOG:])
 
 
@@ -194,16 +227,23 @@ def main():
     agora = datetime.now(FUSO)
     try:
         log = ler_log(PASTA_DADOS)
+        hoje = ler_hoje(PASTA_DADOS)
     except ErroDoProcesso as e:
         print(f"{agora:%Y-%m-%d %H:%M:%S} | ERRO | {e.etapa} | {e}", file=sys.stderr)
         return 1
     usados = {r["link"] for r in log if r.get("link")}
+    usados |= {i["link"] for i in hoje if i.get("link")}
     noticia = None
     try:
         noticia, motivo = escolher(buscar_feed(), usados)
         if noticia:
             novo = registro(
-                agora, "OK", noticia["titulo"], link=noticia["link"], imagem=noticia.get("imagem")
+                agora,
+                "OK",
+                noticia["titulo"],
+                link=noticia["link"],
+                imagem=noticia.get("imagem"),
+                publicacao=publicar_em(agora),
             )
         else:
             novo = registro(agora, "SEM_NOTICIA", motivo)
@@ -211,7 +251,7 @@ def main():
         novo = registro(agora, "ERRO", str(e), e.etapa)
     except Exception as e:
         novo = registro(agora, "ERRO", f"{type(e).__name__}: {e}", "inesperado")
-    gravar(PASTA_DADOS, agora, log, novo, noticia)
+    gravar(PASTA_DADOS, agora, log, novo, hoje, noticia)
     print(linha(novo))
     return 1 if novo["status"] == "ERRO" else 0
 

@@ -123,7 +123,8 @@ function cartao(h) {
   origem.target = "_blank";
   origem.rel = "noopener";
   fonte.appendChild(origem);
-  fonte.appendChild(document.createTextNode(` · ${diaBr(h.data)}`));
+  const dia = (h.publicar_em || h.buscada_em || h.data || "").slice(0, 10);
+  fonte.appendChild(document.createTextNode(dia ? ` · ${diaBr(dia)}` : ""));
   texto.appendChild(fonte);
   card.appendChild(texto);
   return card;
@@ -133,12 +134,23 @@ function mensagem(classe, texto) {
   noticia.replaceChildren(criar("div", classe, texto));
 }
 
+function publicada(lista) {
+  const agora = Date.now();
+  return lista
+    .filter((n) => !n.publicar_em || Date.parse(n.publicar_em) <= agora)
+    .sort((a, b) => Date.parse(a.publicar_em || 0) - Date.parse(b.publicar_em || 0))
+    .pop();
+}
+
 async function carregar() {
   try {
     const resposta = await fetch(URL_HOJE, { cache: "no-cache" });
     if (resposta.status === 404) return mensagem("vazio", "Nenhuma notícia escolhida até agora.");
     if (!resposta.ok) return mensagem("falha", `Não foi possível carregar a notícia. Resposta ${resposta.status}.`);
-    noticia.replaceChildren(cartao(await resposta.json()));
+    const dados = await resposta.json();
+    const atual = publicada(Array.isArray(dados) ? dados : [dados]);
+    if (!atual) return mensagem("vazio", "A próxima notícia será publicada às 8h.");
+    noticia.replaceChildren(cartao(atual));
   } catch (e) {
     mensagem("falha", `Não foi possível carregar a notícia. ${e.message}`);
   }

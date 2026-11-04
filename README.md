@@ -1,10 +1,11 @@
 # Notícias diária
 
-Rotina em Python que, todo dia (agendada para 11h38 de Brasília), lê o
+Rotina em Python que, todo dia de manhã (agendada para 06h38 de Brasília), lê o
 feed RSS da BBC News Brasil, seleciona uma notícia que passe pelo filtro e
-registra a execução. É executada por um workflow agendado do GitHub Actions
-(`cron: 38 14 * * *`, em UTC). O GitHub pode atrasar workflows agendados, então
-o horário real de início varia. O
+registra a execução. A notícia escolhida é publicada na página **às 8h do dia
+seguinte**. É executada por um workflow agendado do GitHub Actions
+(`cron: 38 9 * * *`, em UTC). O GitHub pode atrasar workflows agendados em
+várias horas, e por isso a hora de execução não é a hora de publicação. O
 agendamento e a integração com o feed foram validados antes na amostra
 [agendador](https://github.com/CassiaCristina0o/agendador).
 
@@ -35,7 +36,7 @@ agendamento e a integração com o feed foram validados antes na amostra
 
 | Status | Quando | `hoje.json` | Saída |
 |---|---|---|---|
-| `OK` | uma notícia foi escolhida | substituído | 0 |
+| `OK` | uma notícia foi escolhida | acrescenta a notícia (guarda as 3 últimas) | 0 |
 | `SEM_NOTICIA` | nada passou no filtro (o log traz a contagem por motivo) | mantido | 0 |
 | `ERRO` | falha técnica (feed indisponível, timeout, log ilegível) | mantido | 1 |
 
@@ -46,22 +47,33 @@ há texto de substituição: o log registra etapa, tipo e mensagem do problema.
 
 Cada execução grava, na branch `dados`:
 
-- `data/hoje.json`: título, link, fonte e miniatura da notícia escolhida;
+- `data/hoje.json`: as 3 últimas notícias escolhidas, cada uma com título, link,
+  fonte, miniatura, `buscada_em` (hora real da execução) e `publicar_em` (8h do
+  dia seguinte, com `-03:00`);
 - `data/log.json`: as últimas 30 execuções, com horário real em
-  America/Sao_Paulo.
+  America/Sao_Paulo e o `publicar_em` das notícias escolhidas.
 
 A escrita usa arquivo temporário e `os.replace`, para não deixar JSON pela
 metade. A `main` contém só o código; a `dados` contém só commits automáticos
 (`execução 07/30`). Ao chegar em 30, o workflow recria a `dados` sem histórico,
 mantendo os arquivos atuais, sem tocar na `main`.
 
-`index.html` exibe a notícia do dia a partir do `hoje.json`.
+## Publicação às 8h
+
+A hora em que a tarefa roda varia com a fila do GitHub, então a página não mostra
+"a última notícia gravada". Ela lê o `hoje.json` e exibe a notícia mais recente
+cujo `publicar_em` já passou, comparando com o relógio do visitante. Como o
+horário leva o fuso (`-03:00`), vale para qualquer lugar. A tarefa roda de
+manhã e a notícia aparece às 8h do dia seguinte; mesmo com horas de atraso, a
+execução termina bem antes. Se um dia não houver notícia nova (`SEM_NOTICIA`)
+ou ocorrer erro, a página continua na última publicada. Uma notícia já presente
+na lista não é escolhida de novo.
 
 ## Testes
 
 `tests/test_mensagem_do_dia.py` roda sem internet, com o feed simulado e uma
 pasta temporária. Cobre o filtro (palavra inteira, negativas, políticas, corpo e
-emagrecimento, formato da matéria), a escolha (primeira que passa, repetição), a busca (timeout, conexão,
+emagrecimento, formato da matéria), a escolha (primeira que passa, repetição), o cálculo do `publicar_em`, a lista das 3 últimas notícias e a migração do formato antigo, a busca (timeout, conexão,
 503 com repetição, 404 sem repetição, feed vazio) e o fluxo completo (`OK`,
 `SEM_NOTICIA`, `ERRO`, limite de 30 linhas, log corrompido, imagem presente e
 ausente). Um workflow separado roda os testes a cada alteração na `main`.

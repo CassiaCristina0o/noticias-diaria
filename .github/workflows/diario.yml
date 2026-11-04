@@ -2,7 +2,7 @@ name: diario
 
 on:
   schedule:
-    - cron: '38 14 * * *'
+    - cron: '38 9 * * *'
   workflow_dispatch:
     inputs:
       feed_url:

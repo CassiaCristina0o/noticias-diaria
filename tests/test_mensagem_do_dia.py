@@ -1,5 +1,6 @@
 import json
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -257,9 +258,11 @@ def test_main_ok_grava_hoje_e_log(pasta, monkeypatch):
     codigo = rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1")])
     assert codigo == 0
     hoje = ler(pasta, "hoje.json")
-    assert hoje["titulo"] == "Cientistas anunciam cura"
-    assert hoje["fonte"] == "BBC News Brasil"
-    assert hoje["atualizado_em"].endswith("-03:00")
+    assert len(hoje) == 1
+    assert hoje[0]["titulo"] == "Cientistas anunciam cura"
+    assert hoje[0]["fonte"] == "BBC News Brasil"
+    assert hoje[0]["buscada_em"].endswith("-03:00")
+    assert hoje[0]["publicar_em"].endswith("T08:00:00-03:00")
     log = ler(pasta, "log.json")
     assert [r["status"] for r in log] == ["OK"]
     assert log[0]["link"] == f"{ARTIGOS}1"
@@ -268,13 +271,13 @@ def test_main_ok_grava_hoje_e_log(pasta, monkeypatch):
 def test_main_grava_imagem_em_hoje_e_log(pasta, monkeypatch):
     com_imagem = {**noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1"), "imagem": "https://img.exemplo/a.jpg"}
     rodar(monkeypatch, [com_imagem])
-    assert ler(pasta, "hoje.json")["imagem"] == "https://img.exemplo/a.jpg"
+    assert ler(pasta, "hoje.json")[0]["imagem"] == "https://img.exemplo/a.jpg"
     assert ler(pasta, "log.json")[0]["imagem"] == "https://img.exemplo/a.jpg"
 
 
 def test_main_sem_imagem_grava_nulo(pasta, monkeypatch):
     rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1")])
-    assert ler(pasta, "hoje.json")["imagem"] is None
+    assert ler(pasta, "hoje.json")[0]["imagem"] is None
     assert ler(pasta, "log.json")[0]["imagem"] is None
 
 
@@ -286,6 +289,57 @@ def test_main_sem_noticia_mantem_hoje(pasta, monkeypatch):
     registro = ler(pasta, "log.json")[0]
     assert registro["status"] == "SEM_NOTICIA"
     assert registro["detalhe"] == "1 lidas: 1 fora do formato"
+
+
+def test_publicar_em_e_o_dia_seguinte_as_8h():
+    fuso = timezone(timedelta(hours=-3))
+    agora = datetime(2026, 11, 4, 6, 38, tzinfo=fuso)
+    assert m.publicar_em(agora).isoformat() == "2026-11-05T08:00:00-03:00"
+    assert m.publicar_em(datetime(2026, 11, 30, 11, 0, tzinfo=fuso)).isoformat() == "2026-12-01T08:00:00-03:00"
+
+
+def test_main_log_guarda_publicar_em(pasta, monkeypatch):
+    rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1")])
+    assert ler(pasta, "log.json")[0]["publicar_em"] == ler(pasta, "hoje.json")[0]["publicar_em"]
+
+
+def test_main_hoje_guarda_as_3_ultimas(pasta, monkeypatch):
+    for i in range(1, 5):
+        rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}{i}")])
+    hoje = ler(pasta, "hoje.json")
+    assert [n["link"] for n in hoje] == [f"{ARTIGOS}{i}" for i in (2, 3, 4)]
+
+
+def test_main_migra_hoje_antigo_em_objeto(pasta, monkeypatch):
+    antigo = {
+        "data": "2026-10-30",
+        "titulo": "antiga",
+        "link": f"{ARTIGOS}0",
+        "imagem": None,
+        "fonte": "BBC News Brasil",
+        "atualizado_em": "2026-10-30T15:21:00-03:00",
+    }
+    (pasta / "hoje.json").write_text(json.dumps(antigo), encoding="utf-8")
+    rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1")])
+    hoje = ler(pasta, "hoje.json")
+    assert [n["titulo"] for n in hoje] == ["antiga", "Cientistas anunciam cura"]
+    assert hoje[0]["publicar_em"] == "2026-10-30T15:21:00-03:00"
+
+
+def test_main_nao_repete_link_que_esta_em_hoje(pasta, monkeypatch):
+    (pasta / "hoje.json").write_text(
+        json.dumps([{"publicar_em": "2026-11-05T08:00:00-03:00", "titulo": "x", "link": f"{ARTIGOS}1"}]),
+        encoding="utf-8",
+    )
+    rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1"), noticia("Vacina nova chega", link=f"{ARTIGOS}2")])
+    assert [n["link"] for n in ler(pasta, "hoje.json")] == [f"{ARTIGOS}1", f"{ARTIGOS}2"]
+
+
+def test_main_hoje_corrompido_nao_e_sobrescrito(pasta, monkeypatch):
+    (pasta / "hoje.json").write_text("{ruim", encoding="utf-8")
+    codigo = rodar(monkeypatch, [noticia("Cientistas anunciam cura", link=f"{ARTIGOS}1")])
+    assert codigo == 1
+    assert (pasta / "hoje.json").read_text(encoding="utf-8") == "{ruim"
 
 
 def test_main_erro_registra_etapa_e_sai_com_1(pasta, monkeypatch):
