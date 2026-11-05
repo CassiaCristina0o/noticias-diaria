@@ -1,8 +1,18 @@
-{
-  "data": "2026-11-04",
-  "titulo": "Paraguai intervém em um dos maiores bancos do país e congela dinheiro de milhões de pessoas",
-  "link": "https://www.bbc.com/portuguese/articles/cjy56zrrnn25o?at_medium=RSS&at_campaign=rss",
-  "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/b123/live/8c1666c0-d7ca-11f1-a719-bf3dc3a3d5b5.jpg",
-  "fonte": "BBC News Brasil",
-  "atualizado_em": "2026-11-04T17:54:50-03:00"
-}
+[
+  {
+    "publicar_em": "2026-11-04T17:54:50-03:00",
+    "buscada_em": "2026-11-04T17:54:50-03:00",
+    "titulo": "Paraguai intervém em um dos maiores bancos do país e congela dinheiro de milhões de pessoas",
+    "link": "https://www.bbc.com/portuguese/articles/cjy56zrrnn25o?at_medium=RSS&at_campaign=rss",
+    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/b123/live/8c1666c0-d7ca-11f1-a719-bf3dc3a3d5b5.jpg",
+    "fonte": "BBC News Brasil"
+  },
+  {
+    "publicar_em": "2026-11-06T08:00:00-03:00",
+    "buscada_em": "2026-11-05T14:36:55-03:00",
+    "titulo": "Cristiano Ronaldo se aposenta da seleção de Portugal: veja os momentos mais icônicos do jogador",
+    "link": "https://www.bbc.com/portuguese/articles/cq5ynjjjnxk9o?at_medium=RSS&at_campaign=rss",
+    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/8ba6/live/a3e114a0-8c89-11ef-8537-35d6ce5671fe.jpg",
+    "fonte": "BBC News Brasil"
+  }
+]
