@@ -1,13 +1,5 @@
 [
   {
-    "publicar_em": "2026-11-12T08:00:00-03:00",
-    "buscada_em": "2026-11-11T14:24:15-03:00",
-    "titulo": "Quem vai cuidar dos idosos do Brasil? Por que o envelhecimento acelerado é o 'desafio do século'",
-    "link": "https://www.bbc.com/portuguese/articles/c60qkxv44pq8o?at_medium=RSS&at_campaign=rss",
-    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/2190/live/55752aa0-d902-11f1-a701-fddedf244c16.jpg",
-    "fonte": "BBC News Brasil"
-  },
-  {
     "publicar_em": "2026-11-13T08:00:00-03:00",
     "buscada_em": "2026-11-12T14:43:33-03:00",
     "titulo": "Jensen Huang: como CEO da Nvidia foi de 'rock star' da IA à saída dramática",
@@ -21,6 +13,14 @@
     "titulo": "Outlook voltou: por que demorou para Microsoft resolver o problema?",
     "link": "https://www.bbc.com/portuguese/articles/cw808r14nmjgo?at_medium=RSS&at_campaign=rss",
     "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/f5a0/live/fab7c790-df72-11f1-93e1-3b657b665bcf.jpg",
+    "fonte": "BBC News Brasil"
+  },
+  {
+    "publicar_em": "2026-11-15T08:00:00-03:00",
+    "buscada_em": "2026-11-14T13:02:21-03:00",
+    "titulo": "EUA ainda têm 2,5 mil voos cancelados após suspensão por problema de comunicação: o que se sabe após a retomada",
+    "link": "https://www.bbc.com/portuguese/articles/c54gnly4kzdpo?at_medium=RSS&at_campaign=rss",
+    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/1963/live/ba2043a0-dfb4-11f1-b867-af6986834a9f.jpg",
     "fonte": "BBC News Brasil"
   }
 ]
