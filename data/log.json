@@ -1,13 +1,5 @@
 [
   {
-    "quando": "2026-10-29 14:14:59",
-    "status": "SEM_NOTICIA",
-    "etapa": null,
-    "detalhe": "32 lidas: 4 negativas, 19 políticas, 7 sem pontos, 2 repetidas",
-    "link": null,
-    "imagem": null
-  },
-  {
     "quando": "2026-10-30 13:54:56",
     "status": "SEM_NOTICIA",
     "etapa": null,
@@ -258,5 +250,14 @@
     "link": "https://www.bbc.com/portuguese/articles/cjy5xw4egqp6o?at_medium=RSS&at_campaign=rss",
     "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/6bfc/live/e3f9d920-e7f2-11f1-ab60-79086b6495b8.jpg",
     "publicar_em": "2026-11-25T08:00:00-03:00"
+  },
+  {
+    "quando": "2026-11-25 16:32:53",
+    "status": "OK",
+    "etapa": null,
+    "detalhe": "A influenciadora que ficou 2 meses internada em clínica psiquiátrica por um erro: 'Fui rotulada como psicótica por ser mulher'",
+    "link": "https://www.bbc.com/portuguese/articles/ck879j789y1zo?at_medium=RSS&at_campaign=rss",
+    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/4a09/live/61ab5300-e76f-11f1-99a1-253766e7ad8b.jpg",
+    "publicar_em": "2026-11-26T08:00:00-03:00"
   }
 ]
