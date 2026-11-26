@@ -1,13 +1,5 @@
 [
   {
-    "publicar_em": "2026-11-24T08:00:00-03:00",
-    "buscada_em": "2026-11-23T18:38:30-03:00",
-    "titulo": "A tempestade perfeita (dentro e fora do Brasil) que faz preço do dólar chegar a R$ 6",
-    "link": "https://www.bbc.com/portuguese/articles/cwm253lr95zjo?at_medium=RSS&at_campaign=rss",
-    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/79dc/live/ed3d37e0-e778-11f1-8f1d-19326d289ceb.jpg",
-    "fonte": "BBC News Brasil"
-  },
-  {
     "publicar_em": "2026-11-25T08:00:00-03:00",
     "buscada_em": "2026-11-24T17:19:12-03:00",
     "titulo": "Papa Francisco afirma em diário que teria visto o Diabo três vezes e as 'portas do inferno'",
@@ -21,6 +13,14 @@
     "titulo": "A influenciadora que ficou 2 meses internada em clínica psiquiátrica por um erro: 'Fui rotulada como psicótica por ser mulher'",
     "link": "https://www.bbc.com/portuguese/articles/ck879j789y1zo?at_medium=RSS&at_campaign=rss",
     "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/4a09/live/61ab5300-e76f-11f1-99a1-253766e7ad8b.jpg",
+    "fonte": "BBC News Brasil"
+  },
+  {
+    "publicar_em": "2026-11-27T08:00:00-03:00",
+    "buscada_em": "2026-11-26T16:15:19-03:00",
+    "titulo": "Cientistas encontram dezenas de espécies potencialmente novas em montanhas da Amazônia",
+    "link": "https://www.bbc.com/portuguese/articles/c95y1k8z7m6ro?at_medium=RSS&at_campaign=rss",
+    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/0cd3/live/77915b80-e754-11f1-88dc-f746e0cde621.jpg",
     "fonte": "BBC News Brasil"
   }
 ]

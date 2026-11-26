@@ -1,13 +1,5 @@
 [
   {
-    "quando": "2026-10-30 13:54:56",
-    "status": "SEM_NOTICIA",
-    "etapa": null,
-    "detalhe": "32 lidas: 9 negativas, 13 políticas, 8 sem pontos, 2 repetidas",
-    "link": null,
-    "imagem": null
-  },
-  {
     "quando": "2026-10-30 15:20:23",
     "status": "SEM_NOTICIA",
     "etapa": null,
@@ -259,5 +251,14 @@
     "link": "https://www.bbc.com/portuguese/articles/ck879j789y1zo?at_medium=RSS&at_campaign=rss",
     "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/4a09/live/61ab5300-e76f-11f1-99a1-253766e7ad8b.jpg",
     "publicar_em": "2026-11-26T08:00:00-03:00"
+  },
+  {
+    "quando": "2026-11-26 16:15:19",
+    "status": "OK",
+    "etapa": null,
+    "detalhe": "Cientistas encontram dezenas de espécies potencialmente novas em montanhas da Amazônia",
+    "link": "https://www.bbc.com/portuguese/articles/c95y1k8z7m6ro?at_medium=RSS&at_campaign=rss",
+    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/0cd3/live/77915b80-e754-11f1-88dc-f746e0cde621.jpg",
+    "publicar_em": "2026-11-27T08:00:00-03:00"
   }
 ]
