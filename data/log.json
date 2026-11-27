@@ -1,13 +1,5 @@
 [
   {
-    "quando": "2026-10-30 15:20:23",
-    "status": "SEM_NOTICIA",
-    "etapa": null,
-    "detalhe": "32 lidas: 8 negativas, 13 políticas, 9 sem pontos, 2 repetidas",
-    "link": null,
-    "imagem": null
-  },
-  {
     "quando": "2026-10-30 15:21:21",
     "status": "OK",
     "etapa": null,
@@ -260,5 +252,14 @@
     "link": "https://www.bbc.com/portuguese/articles/c95y1k8z7m6ro?at_medium=RSS&at_campaign=rss",
     "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/0cd3/live/77915b80-e754-11f1-88dc-f746e0cde621.jpg",
     "publicar_em": "2026-11-27T08:00:00-03:00"
+  },
+  {
+    "quando": "2026-11-27 16:09:13",
+    "status": "OK",
+    "etapa": null,
+    "detalhe": "A escritora que desafia o pessimismo sobre o futuro da inteligência artificial",
+    "link": "https://www.bbc.com/portuguese/articles/cmkgdelx0k1vo?at_medium=RSS&at_campaign=rss",
+    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/93d4/live/6a6edf50-e9a6-11f1-b880-15b494ba858d.jpg",
+    "publicar_em": "2026-11-28T08:00:00-03:00"
   }
 ]

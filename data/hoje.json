@@ -1,13 +1,5 @@
 [
   {
-    "publicar_em": "2026-11-25T08:00:00-03:00",
-    "buscada_em": "2026-11-24T17:19:12-03:00",
-    "titulo": "Papa Francisco afirma em diário que teria visto o Diabo três vezes e as 'portas do inferno'",
-    "link": "https://www.bbc.com/portuguese/articles/cjy5xw4egqp6o?at_medium=RSS&at_campaign=rss",
-    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/6bfc/live/e3f9d920-e7f2-11f1-ab60-79086b6495b8.jpg",
-    "fonte": "BBC News Brasil"
-  },
-  {
     "publicar_em": "2026-11-26T08:00:00-03:00",
     "buscada_em": "2026-11-25T16:32:53-03:00",
     "titulo": "A influenciadora que ficou 2 meses internada em clínica psiquiátrica por um erro: 'Fui rotulada como psicótica por ser mulher'",
@@ -21,6 +13,14 @@
     "titulo": "Cientistas encontram dezenas de espécies potencialmente novas em montanhas da Amazônia",
     "link": "https://www.bbc.com/portuguese/articles/c95y1k8z7m6ro?at_medium=RSS&at_campaign=rss",
     "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/0cd3/live/77915b80-e754-11f1-88dc-f746e0cde621.jpg",
+    "fonte": "BBC News Brasil"
+  },
+  {
+    "publicar_em": "2026-11-28T08:00:00-03:00",
+    "buscada_em": "2026-11-27T16:09:13-03:00",
+    "titulo": "A escritora que desafia o pessimismo sobre o futuro da inteligência artificial",
+    "link": "https://www.bbc.com/portuguese/articles/cmkgdelx0k1vo?at_medium=RSS&at_campaign=rss",
+    "imagem": "https://ichef.bbci.co.uk/ace/ws/240/cpsprodpb/93d4/live/6a6edf50-e9a6-11f1-b880-15b494ba858d.jpg",
     "fonte": "BBC News Brasil"
   }
 ]
